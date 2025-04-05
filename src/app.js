@@ -26,7 +26,7 @@ function writeTasks(tasks) {
 // Get all tasks
 app.get('/tasks', (req, res) => {
     const tasks = readTasks();
-    console.log("tasks -----------> ", tasks);
+    console.log("tasks -------------> ", tasks);
     res.json(tasks);
 });
 
