@@ -17,21 +17,29 @@ function readTasks() {
     const data = fs.readFileSync(DATA_FILE);
     return JSON.parse(data);
 }
- 
+
 // Helper function to write tasks to the JSON file
 function writeTasks(tasks) {
     fs.writeFileSync(DATA_FILE, JSON.stringify(tasks, null, 2));
 }
 
+// Health check
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+});
+
 // Get all tasks
 app.get('/tasks', (req, res) => {
     const tasks = readTasks();
-    console.log("tasks ------>" , tasks);
     res.json(tasks);
 });
 
 // Add a new task
 app.post('/tasks', (req, res) => {
+    if (!req.body.title) {
+        return res.status(400).json({ error: 'Title is required' });
+    }
+
     const tasks = readTasks();
     const newTask = {
         id: Date.now(),
@@ -62,20 +70,34 @@ app.put('/tasks/:id', (req, res) => {
     res.json(tasks[taskIndex]);
 });
 
+// Toggle completed status of a task
+app.patch('/tasks/:id/toggle', (req, res) => {
+    const tasks = readTasks();
+    const taskId = parseInt(req.params.id);
+    const task = tasks.find(task => task.id === taskId);
+
+    if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
+    }
+
+    task.completed = !task.completed;
+    writeTasks(tasks);
+    res.json(task);
+});
+
 // Delete a task
 app.delete('/tasks/:id', (req, res) => {
     const tasks = readTasks();
     const taskId = parseInt(req.params.id);
+    const task = tasks.find(task => task.id === taskId);
     const filteredTasks = tasks.filter(task => task.id !== taskId);
 
-    if (tasks.length === filteredTasks.length) {
+    if (!task) {
         return res.status(404).json({ error: 'Task not found' });
     }
 
-
-    
     writeTasks(filteredTasks);
-    res.status(204).send();
+    res.status(200).json(task);
 });
 
 // Start the server
@@ -83,4 +105,4 @@ var server = app.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
 });
 
-module.exports = server
+module.exports = server;
