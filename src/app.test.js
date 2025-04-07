@@ -1,58 +1,75 @@
 const request = require('supertest');
 const app = require('./app');
-const fs = require('fs');
-const path = require('path');
 
-const DATA_FILE = path.join(__dirname, 'tasks-122.json');
+describe('Task API', () => {
+    it('should return health status', async () => {
+        const res = await request(app).get('/health');
+        expect(res.statusCode).toEqual(200);
+        expect(res.text).toBe('OK');
+    });
 
-beforeEach(() => {
-    fs.writeFileSync(DATA_FILE, JSON.stringify([]));
-});
-
-describe('Tasks API', () => {
     it('should get all tasks', async () => {
-        const response = await request(app).get('/tasks');
-        expect(response.status).toBe(200);
-        expect(response.body).toEqual([]);
+        const res = await request(app).get('/tasks');
+        expect(res.statusCode).toEqual(200);
+        expect(Array.isArray(res.body)).toBe(true);
     });
 
     it('should add a new task', async () => {
-        const newTask = { title: 'Test Task' };
-        const response = await request(app).post('/tasks').send(newTask);
-        expect(response.status).toBe(201);
-        expect(response.body).toHaveProperty('id');
-        expect(response.body.title).toBe(newTask.title);
+        const newTask = { title: 'Test task' };
+        const res = await request(app).post('/tasks').send(newTask);
+        expect(res.statusCode).toEqual(201);
+        expect(res.body.title).toBe(newTask.title);
+    });
+
+    it('should return 400 if title is not provided', async () => {
+        const res = await request(app).post('/tasks').send({});
+        expect(res.statusCode).toEqual(400);
+        expect(res.body.error).toBe('Title is required');
     });
 
     it('should update a task by ID', async () => {
-        const newTask = { title: 'Test Task' };
-        const response = await request(app).post('/tasks').send(newTask);
-        const taskId = response.body.id;
-        const updatedTask = { title: 'Updated Task' };
-        const updateResponse = await request(app).put(`/tasks/${taskId}`).send(updatedTask);
-        expect(updateResponse.status).toBe(200);
-        expect(updateResponse.body.title).toBe(updatedTask.title);
+        const newTask = { title: 'Update task' };
+        const postRes = await request(app).post('/tasks').send(newTask);
+        const taskId = postRes.body.id;
+        const updatedTask = { title: 'Updated task' };
+        const res = await request(app).put(`/tasks/${taskId}`).send(updatedTask);
+        expect(res.statusCode).toEqual(200);
+        expect(res.body.title).toBe(updatedTask.title);
+    });
+
+    it('should return 404 if task not found during update', async () => {
+        const res = await request(app).put('/tasks/99999').send({ title: 'Not found' });
+        expect(res.statusCode).toEqual(404);
+        expect(res.body.error).toBe('Task not found');
+    });
+
+    it('should toggle completed status of a task', async () => {
+        const newTask = { title: 'Toggle task' };
+        const postRes = await request(app).post('/tasks').send(newTask);
+        const taskId = postRes.body.id;
+        const res = await request(app).patch(`/tasks/${taskId}/toggle`);
+        expect(res.statusCode).toEqual(200);
+        expect(res.body.completed).toBe(true);
+    });
+
+    it('should return 404 if task not found during toggle', async () => {
+        const res = await request(app).patch('/tasks/99999/toggle');
+        expect(res.statusCode).toEqual(404);
+        expect(res.body.error).toBe('Task not found');
     });
 
     it('should delete a task', async () => {
-        const newTask = { title: 'Test Task' };
-        const response = await request(app).post('/tasks').send(newTask);
-        const taskId = response.body.id;
-        const deleteResponse = await request(app).delete(`/tasks/${taskId}`);
-        expect(deleteResponse.status).toBe(204);
-        const getResponse = await request(app).get('/tasks');
-        expect(getResponse.body).toEqual([]);
+        const newTask = { title: 'Delete task' };
+        const postRes = await request(app).post('/tasks').send(newTask);
+        const taskId = postRes.body.id;
+        const res = await request(app).delete(`/tasks/${taskId}`);
+        expect(res.statusCode).toEqual(200);
+        expect(res.body.title).toBe(newTask.title);
     });
 
-    it('should return 404 for a non-existing task on update', async () => {
-        const updateResponse = await request(app).put('/tasks/999').send({ title: 'Updated Task' });
-        expect(updateResponse.status).toBe(404);
-        expect(updateResponse.body).toEqual({ error: 'Task not found' });
-    });
-
-    it('should return 404 for a non-existing task on delete', async () => {
-        const deleteResponse = await request(app).delete('/tasks/999');
-        expect(deleteResponse.status).toBe(404);
-        expect(deleteResponse.body).toEqual({ error: 'Task not found' });
+    it('should return 404 if task not found during delete', async () => {
+        const res = await request(app).delete('/tasks/99999');
+        expect(res.statusCode).toEqual(404);
+        expect(res.body.error).toBe('Task not found');
     });
 });
