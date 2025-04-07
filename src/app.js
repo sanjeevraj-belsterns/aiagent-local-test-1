@@ -34,6 +34,13 @@ app.get('/tasks', (req, res) => {
     res.json(tasks);
 });
 
+// Get only active tasks
+app.get('/tasks/active', (req, res) => {
+    const tasks = readTasks();
+    const activeTasks = tasks.filter(task => task.isActive);
+    res.json(activeTasks);
+});
+
 // Get a single task by ID
 app.get('/tasks/:id', (req, res) => {
     const tasks = readTasks();
