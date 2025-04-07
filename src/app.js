@@ -13,15 +13,20 @@ app.use(express.json());
 function readTasks() {
     if (!fs.existsSync(DATA_FILE)) {
         return [];
-    } 
+    }
     const data = fs.readFileSync(DATA_FILE);
     return JSON.parse(data);
 }
- 
+
 // Helper function to write tasks to the JSON file
 function writeTasks(tasks) {
     fs.writeFileSync(DATA_FILE, JSON.stringify(tasks, null, 2));
 }
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+});
 
 // Get all tasks
 app.get('/tasks', (req, res) => {
@@ -29,14 +34,32 @@ app.get('/tasks', (req, res) => {
     res.json(tasks);
 });
 
+// Get a single task by ID
+app.get('/tasks/:id', (req, res) => {
+    const tasks = readTasks();
+    const taskId = parseInt(req.params.id);
+    const task = tasks.find(task => task.id === taskId);
+
+    if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
+    }
+
+    res.json(task);
+});
+
 // Add a new task
 app.post('/tasks', (req, res) => {
+    if (!req.body.title || req.body.title.trim() === '') {
+        return res.status(400).json({ error: 'Task title is required' });
+    }
+
     const tasks = readTasks();
     const newTask = {
         id: Date.now(),
         title: req.body.title,
         completed: false,
-        isActive: true
+        isActive: true,
+        createdAt: new Date().toISOString()
     };
     tasks.push(newTask);
     writeTasks(tasks);
@@ -65,21 +88,20 @@ app.put('/tasks/:id', (req, res) => {
 app.delete('/tasks/:id', (req, res) => {
     const tasks = readTasks();
     const taskId = parseInt(req.params.id);
+    const task = tasks.find(task => task.id === taskId);
     const filteredTasks = tasks.filter(task => task.id !== taskId);
 
-    if (tasks.length === filteredTasks.length) {
+    if (!task) {
         return res.status(404).json({ error: 'Task not found' });
     }
 
-
-    
     writeTasks(filteredTasks);
-    res.status(204).send();
+    res.status(200).json({ deleted: task });
 });
 
 // Start the server
-var server = app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
 });
 
-module.exports = server
+module.exports = server;
