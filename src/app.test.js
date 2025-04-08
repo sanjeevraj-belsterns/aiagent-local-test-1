@@ -12,14 +12,14 @@ beforeEach(() => {
 describe('Task API', () => {
     it('should get all tasks', async () => {
         const response = await request(app).get('/tasks');
-        expect(response.status).toBe(200);
+        expect(response.statusCode).toBe(200);
         expect(response.body).toEqual([]);
     });
 
     it('should add a new task', async () => {
         const newTask = { title: 'Test Task' };
         const response = await request(app).post('/tasks').send(newTask);
-        expect(response.status).toBe(201);
+        expect(response.statusCode).toBe(201);
         expect(response.body).toHaveProperty('id');
         expect(response.body.title).toBe(newTask.title);
     });
@@ -28,10 +28,11 @@ describe('Task API', () => {
         const newTask = { title: 'Test Task' };
         const addResponse = await request(app).post('/tasks').send(newTask);
         const taskId = addResponse.body.id;
-        const updatedTask = { title: 'Updated Task' };
+        const updatedTask = { title: 'Updated Task', completed: true };
         const response = await request(app).put(`/tasks/${taskId}`).send(updatedTask);
-        expect(response.status).toBe(200);
+        expect(response.statusCode).toBe(200);
         expect(response.body.title).toBe(updatedTask.title);
+        expect(response.body.completed).toBe(true);
     });
 
     it('should delete a task', async () => {
@@ -39,20 +40,31 @@ describe('Task API', () => {
         const addResponse = await request(app).post('/tasks').send(newTask);
         const taskId = addResponse.body.id;
         const response = await request(app).delete(`/tasks/${taskId}`);
-        expect(response.status).toBe(204);
+        expect(response.statusCode).toBe(204);
         const getResponse = await request(app).get('/tasks');
         expect(getResponse.body).toEqual([]);
     });
 
-    it('should return 404 for non-existent task on update', async () => {
+    it('should return 404 when updating a non-existent task', async () => {
         const response = await request(app).put('/tasks/999').send({ title: 'Non-existent Task' });
-        expect(response.status).toBe(404);
-        expect(response.body).toHaveProperty('error', 'Task not found');
+        expect(response.statusCode).toBe(404);
+        expect(response.body).toEqual({ error: 'Task not found' });
     });
 
-    it('should return 404 for non-existent task on delete', async () => {
-        const response = await request(app).delete('/tasks/999');
-        expect(response.status).toBe(404);
-        expect(response.body).toHaveProperty('error', 'Task not found');
+    it('should return statistics of tasks', async () => {
+        await request(app).post('/tasks').send({ title: 'Task 1', completed: true });
+        await request(app).post('/tasks').send({ title: 'Task 2', completed: false });
+        const response = await request(app).get('/tasks/stats');
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toEqual({ total: 2, completed: 1, active: 1 });
+    });
+
+    it('should get all active tasks', async () => {
+        await request(app).post('/tasks').send({ title: 'Task 1', completed: false });
+        await request(app).post('/tasks').send({ title: 'Task 2', completed: true });
+        const response = await request(app).get('/tasks/active');
+        expect(response.statusCode).toBe(200);
+        expect(response.body.length).toBe(1);
+        expect(response.body[0].title).toBe('Task 1');
     });
 });
