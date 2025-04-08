@@ -89,6 +89,13 @@ app.get('/tasks/do_later', (req, res) => {
     res.json(inProgressTasks);
 });
 
+// Get all tasks with status "planning"
+app.get('/tasks/planning', (req, res) => {
+    const tasks = readTasks();
+    const inProgressTasks = tasks.filter(task => task.status === 'planning');
+    res.json(inProgressTasks);
+});
+
 // Delete a task
 app.delete('/tasks/:id', (req, res) => {
     const tasks = readTasks();
