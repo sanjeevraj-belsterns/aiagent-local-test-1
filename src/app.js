@@ -85,15 +85,22 @@ app.get('/tasks/in_progress', (req, res) => {
 // Get all tasks with status "do_later"
 app.get('/tasks/do_later', (req, res) => {
     const tasks = readTasks();
-    const inProgressTasks = tasks.filter(task => task.status === 'do_later');
-    res.json(inProgressTasks);
+    const doLaterTasks = tasks.filter(task => task.status === 'do_later');
+    res.json(doLaterTasks);
 });
 
 // Get all tasks with status "planning"
 app.get('/tasks/planning', (req, res) => {
     const tasks = readTasks();
-    const inProgressTasks = tasks.filter(task => task.status === 'planning');
-    res.json(inProgressTasks);
+    const planningTasks = tasks.filter(task => task.status === 'planning');
+    res.json(planningTasks);
+});
+
+// Get all tasks with status "testing"
+app.get('/tasks/testing', (req, res) => {
+    const tasks = readTasks();
+    const testingTasks = tasks.filter(task => task.status === 'testing');
+    res.json(testingTasks);
 });
 
 // Delete a task
