@@ -77,6 +77,17 @@ app.delete('/tasks/:id', (req, res) => {
     res.status(204).send();
 });
 
+// Get task statistics (active vs completed)
+app.get('/tasks/stats', (req, res) => {
+    const tasks = readTasks();
+    const stats = {
+        total: tasks.length,
+        completed: tasks.filter(task => task.completed).length,
+        active: tasks.filter(task => !task.completed).length
+    };
+    res.json(stats);
+});
+
 // Start the server
 var server = app.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
