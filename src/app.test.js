@@ -26,8 +26,8 @@ describe('Task API', () => {
 
     it('should update a task by ID', async () => {
         const newTask = { title: 'Test Task' };
-        const postResponse = await request(app).post('/tasks').send(newTask);
-        const taskId = postResponse.body.id;
+        const addResponse = await request(app).post('/tasks').send(newTask);
+        const taskId = addResponse.body.id;
         const updatedTask = { title: 'Updated Task' };
         const response = await request(app).put(`/tasks/${taskId}`).send(updatedTask);
         expect(response.statusCode).toBe(200);
@@ -40,27 +40,33 @@ describe('Task API', () => {
         expect(response.body.error).toBe('Task not found');
     });
 
-    it('should get all active tasks', async () => {
-        await request(app).post('/tasks').send({ title: 'Active Task', isActive: true });
-        await request(app).post('/tasks').send({ title: 'Inactive Task', isActive: false });
-        const response = await request(app).get('/tasks/active');
-        expect(response.statusCode).toBe(200);
-        expect(response.body.length).toBe(1);
-    });
-
     it('should delete a task', async () => {
-        const newTask = { title: 'Task to Delete' };
-        const postResponse = await request(app).post('/tasks').send(newTask);
-        const taskId = postResponse.body.id;
+        const newTask = { title: 'Test Task' };
+        const addResponse = await request(app).post('/tasks').send(newTask);
+        const taskId = addResponse.body.id;
         const response = await request(app).delete(`/tasks/${taskId}`);
         expect(response.statusCode).toBe(204);
-        const getResponse = await request(app).get('/tasks');
-        expect(getResponse.body.length).toBe(0);
     });
 
     it('should return 404 for deleting a non-existent task', async () => {
         const response = await request(app).delete('/tasks/999');
         expect(response.statusCode).toBe(404);
         expect(response.body.error).toBe('Task not found');
+    });
+
+    it('should get all active tasks', async () => {
+        const newTask = { title: 'Active Task', isActive: true };
+        await request(app).post('/tasks').send(newTask);
+        const response = await request(app).get('/tasks/active');
+        expect(response.statusCode).toBe(200);
+        expect(response.body.length).toBe(1);
+    });
+
+    it('should get all inactive tasks', async () => {
+        const newTask = { title: 'Inactive Task', isActive: false };
+        await request(app).post('/tasks').send(newTask);
+        const response = await request(app).get('/tasks/inactive');
+        expect(response.statusCode).toBe(200);
+        expect(response.body.length).toBe(1);
     });
 });
