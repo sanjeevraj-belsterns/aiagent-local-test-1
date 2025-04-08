@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "test:unit": "NODE_ENV=dev mocha -r ts-node/register/transpile-only -r tests/loadenv.js 'tests/**/*.js'"
   },
   "keywords": [],
   "author": "",
