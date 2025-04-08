@@ -88,6 +88,13 @@ app.get('/tasks/stats', (req, res) => {
     res.json(stats);
 });
 
+// Get all active (incomplete) tasks
+app.get('/tasks/active', (req, res) => {
+    const tasks = readTasks();
+    const activeTasks = tasks.filter(task => !task.completed);
+    res.json(activeTasks);
+});
+
 // Start the server
 var server = app.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
