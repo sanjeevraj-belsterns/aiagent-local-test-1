@@ -75,6 +75,13 @@ app.get('/tasks/inactive', (req, res) => {
     res.json(inactiveTasks);
 });
 
+// Get all tasks with status "in_progress"
+app.get('/tasks/in_progress', (req, res) => {
+    const tasks = readTasks();
+    const inProgressTasks = tasks.filter(task => task.status === 'in_progress');
+    res.json(inProgressTasks);
+});
+
 // Delete a task
 app.delete('/tasks/:id', (req, res) => {
     const tasks = readTasks();
