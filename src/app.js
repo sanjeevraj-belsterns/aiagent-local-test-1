@@ -61,6 +61,13 @@ app.put('/tasks/:id', (req, res) => {
     res.json(tasks[taskIndex]);
 });
 
+// Get all active tasks
+app.get('/tasks/active', (req, res) => {
+    const tasks = readTasks();
+    const activeTasks = tasks.filter(task => task.isActive);
+    res.json(activeTasks);
+});
+
 // Delete a task
 app.delete('/tasks/:id', (req, res) => {
     const tasks = readTasks();
@@ -70,9 +77,6 @@ app.delete('/tasks/:id', (req, res) => {
     if (tasks.length === filteredTasks.length) {
         return res.status(404).json({ error: 'Task not found' });
     }
-
-
-    
     writeTasks(filteredTasks);
     res.status(204).send();
 });
