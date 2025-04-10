@@ -61,6 +61,13 @@ app.put('/tasks/:id', (req, res) => {
     res.json(tasks[taskIndex]);
 });
 
+// Get all active tasks
+app.get('/tasks/active', (req, res) => {
+    const tasks = readTasks();
+    const activeTasks = tasks.filter(task => task.isActive);
+    res.json(activeTasks);
+});
+
 // Delete a task
 app.delete('/tasks/:id', (req, res) => {
     const tasks = readTasks();
